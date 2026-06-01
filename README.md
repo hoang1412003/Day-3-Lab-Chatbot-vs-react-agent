@@ -1,56 +1,73 @@
-# Lab 3: Chatbot vs ReAct Agent (Industry Edition)
+# 🤖 Lab 3: Chatbot vs ReAct Agent (Bài nộp)
 
-Welcome to Phase 3 of the Agentic AI course! This lab focuses on moving from a simple LLM Chatbot to a sophisticated **ReAct Agent** with industry-standard monitoring.
+Kho lưu trữ này chứa bài nộp hoàn chỉnh của tôi cho Lab 3 của khóa học Agentic AI. Dự án minh họa quá trình tiến hóa từ một LLM Chatbot cơ bản thành một **ReAct Agent** tinh vi, được trang bị công cụ (tools), hệ thống bảo vệ (guardrails), và hệ thống đo lường (telemetry) chuẩn công nghiệp.
 
-## 🚀 Getting Started
+## ✨ Các Tính Năng Đã Triển Khai
 
-### 1. Setup Environment
-Copy the `.env.example` to `.env` and fill in your API keys:
+1. **Baseline Chatbot (`chatbot.py`)**: Một kịch bản trò chuyện đơn giản được dùng làm cơ sở đối chiếu (baseline) để chứng minh những hạn chế của LLM tiêu chuẩn trong việc suy luận đa bước.
+2. **ReAct Agent (`run_agent.py`)**: Một Agent hoạt động hoàn chỉnh, triển khai vòng lặp `Suy nghĩ-Hành động-Quan sát` (Thought-Action-Observation) trong `src/agent/agent.py`.
+3. **Các Công Cụ Tùy Chỉnh (Custom Tools)**: 
+   - `calc_math`: Tính toán toán học an toàn.
+   - `web_search`: Công cụ tìm kiếm giả lập để lấy giá sản phẩm, giảm giá, và thông tin giao hàng.
+4. **Hệ Thống Bảo Vệ & Logic Thử Lại (Agent v2)**: Agent tự động bắt các lỗi định dạng (Parsing Errors) và ảo giác công cụ (Tool Hallucinations), hướng dẫn LLM đi đúng hướng với giới hạn `max_retries` (số lần thử lại tối đa).
+5. **Chuyển Đổi Provider (Factory Pattern)**: Dễ dàng chuyển đổi linh hoạt giữa các mô hình OpenAI, Gemini, và Local (Phi-3) bằng cách thay đổi biến `DEFAULT_PROVIDER` trong file `.env`.
+6. **Đo Lường Nâng Cao (Advanced Telemetry)**: Ghi log mọi sự kiện dưới dạng JSON có cấu trúc, tự động tính toán `Tỉ lệ Token` (Completion / Prompt) và `Ước tính chi phí (USD)` cho mỗi lần chạy.
+7. **Phân Tích Log (`analyze_logs.py`)**: Một script để đọc các log có cấu trúc và phân tích tỷ lệ thành công, lỗi sập, ảo giác, mức tiêu thụ token, và tổng chi phí.
+
+---
+
+## 🚀 Hướng Dẫn Bắt Đầu
+
+### 1. Cài Đặt Môi Trường
+Copy file `.env.example` thành `.env` và điền API keys của bạn (hoặc cấu hình Local Models):
 ```bash
 cp .env.example .env
 ```
 
-### 2. Install Dependencies
+### 2. Cài Đặt Thư Viện
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Directory Structure
-- `src/tools/`: Extension point for your custom tools.
+### 3. Chạy Hệ Thống
 
-## 🏠 Running with Local Models (CPU)
+**Chạy Chatbot Baseline:**
+```bash
+python chatbot.py
+```
 
-If you don't want to use OpenAI or Gemini, you can run open-source models (like Phi-3) directly on your CPU using `llama-cpp-python`.
+**Chạy ReAct Agent:**
+```bash
+python run_agent.py
+```
 
-### 1. Download the Model
-Download the **Phi-3-mini-4k-instruct-q4.gguf** (approx 2.2GB) from Hugging Face:
-- [Phi-3-mini-4k-instruct-GGUF](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf)
-- Direct Download: [phi-3-mini-4k-instruct-q4.gguf](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf)
+**Phân Tích Log (Lỗi & Thống Kê):**
+Sau khi chạy agent, bạn có thể tạo báo cáo tự động về token, chi phí và các lỗi thường gặp:
+```bash
+python src/telemetry/analyze_logs.py
+```
 
-### 2. Place Model in Project
-Create a `models/` folder in the root and move the downloaded `.gguf` file there.
+---
 
-### 3. Update `.env`
-Change your `DEFAULT_PROVIDER` and set the path:
+## 🏠 Chạy Bằng Local Models (CPU)
+
+Nếu bạn không muốn sử dụng API của OpenAI hay Gemini, bạn có thể chạy các mô hình nguồn mở (như Phi-3) trực tiếp trên CPU thông qua `llama-cpp-python`.
+
+### 1. Tải Mô Hình
+Tải file **Phi-3-mini-4k-instruct-q4.gguf** (khoảng 2.2GB) từ Hugging Face:
+- Link tải trực tiếp: [phi-3-mini-4k-instruct-q4.gguf](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf)
+
+### 2. Đặt Mô Hình Vào Dự Án
+Tạo một thư mục `models/` ở thư mục gốc của dự án và dán file `.gguf` vừa tải vào đó.
+
+### 3. Cập Nhật `.env`
+Đổi biến `DEFAULT_PROVIDER` và cập nhật đường dẫn:
 ```env
 DEFAULT_PROVIDER=local
 LOCAL_MODEL_PATH=./models/Phi-3-mini-4k-instruct-q4.gguf
 ```
 
-## 🎯 Lab Objectives
-
-1.  **Baseline Chatbot**: Observe the limitations of a standard LLM when faced with multi-step reasoning.
-2.  **ReAct Loop**: Implement the `Thought-Action-Observation` cycle in `src/agent/agent.py`.
-3.  **Provider Switching**: Swap between OpenAI and Gemini seamlessly using the `LLMProvider` interface.
-4.  **Failure Analysis**: Use the structured logs in `logs/` to identify why the agent fails (hallucinations, parsing errors).
-5.  **Grading & Bonus**: Follow the [SCORING.md](file:///Users/tindt/personal/ai-thuc-chien/day03-lab-agent/SCORING.md) to maximize your points and explore bonus metrics.
-
-## 🛠️ How to Use This Baseline
-The code is designed as a **Production Prototype**. It includes:
-- **Telemetry**: Every action is logged in JSON format for later analysis.
-- **Robust Provider Pattern**: Easily extendable to any LLM API.
-- **Clean Skeletons**: Focus on the logic that matters—the agent's reasoning process.
-
----
-
-*Happy Coding! Let's build agents that actually work.*
+Chạy script test local để xác nhận mô hình của bạn đang hoạt động bình thường:
+```bash
+python tests/test_local.py
+```
